@@ -40,5 +40,31 @@ public class ProductService {
         }
         return products;
     }
+    public List<Product> getProductsByCriteria(
+            String productName,
+            String categoryName,
+            Instant creationMin,
+            Instant creationMax,
+            int page,
+            int size
+    ) {
 
+        validator.validatePagination(page, size);
+        validator.validateCriteria(creationMin, creationMax);
+
+        List<Product> products = repository.getProductsByCriteriaWithPagination(
+                productName,
+                categoryName,
+                creationMin,
+                creationMax,
+                page,
+                size
+        );
+
+        if (products.isEmpty()) {
+            throw new NotFoundException("Product", "criteria");
+        }
+
+        return products;
+    }
 }

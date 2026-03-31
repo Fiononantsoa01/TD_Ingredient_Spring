@@ -50,5 +50,33 @@ public class ProductController {
         );
         return ResponseEntity.ok(products);
     }
+    @GetMapping("/products/filter")
+    public ResponseEntity<List<Product>> searchProducts(
+            @RequestParam(required = false) String productName,
+            @RequestParam(required = false) String categoryName,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            Instant creationMin,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            Instant creationMax,
+
+            @RequestParam int page,
+            @RequestParam int size
+    ) {
+
+        return ResponseEntity.ok(
+                service.getProductsByCriteria(
+                        productName,
+                        categoryName,
+                        creationMin,
+                        creationMax,
+                        page,
+                        size
+                )
+        );
+    }
 
 }

@@ -146,5 +146,97 @@ public class ProductRepository {
             throw new RuntimeException("Error to get Product " + e);
         }
     }
+    public List<Product> getProductsByCriteriaWithPagination(
+            String productName,
+            String categoryName,
+            Instant creationMin,
+            Instant creationMax,
+            int page,
+            int size
+    ) {
+
+        List<Product> products = new ArrayList<>();
+
+        StringBuilder sql = new StringBuilder("""
+            SELECT p.id, p.name, p.price, p.creation_datetime,
+                   c.id as category_id, c.name as category_name
+            FROM product p
+            LEFT JOIN product_category c ON p.id = c.product_id
+            WHERE 1=1
+        """);
+
+        List<Object> params = new ArrayList<>();
+
+
+        if (productName != null) {
+            sql.append(" AND p.name ILIKE ? ");
+            params.add("%" + productName + "%");
+        }
+
+        if (categoryName != null) {
+            sql.append(" AND c.name ILIKE ? ");
+            params.add("%" + categoryName + "%");
+        }
+
+        if (creationMin != null) {
+            sql.append(" AND p.creation_datetime >= ? ");
+            params.add(Timestamp.from(creationMin));
+        }
+
+        if (creationMax != null) {
+            sql.append(" AND p.creation_datetime <= ? ");
+            params.add(Timestamp.from(creationMax));
+        }
+
+        sql.append(" ORDER BY p.id DESC LIMIT ? OFFSET ? ");
+        int offset = (page - 1) * size;
+
+        params.add(size);
+        params.add(offset);
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setObject(i + 1, params.get(i));
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+
+                    ProductCategory category = null;
+                    if (rs.getInt("id") != 0) {
+                        category = new ProductCategory(
+                                rs.getInt("id"),
+                                rs.getString("name")
+                        );
+                    }
+
+                    Product product = new Product();
+                    product.setId(rs.getInt("id"));
+                    product.setName(rs.getString("name"));
+                    product.setPrice(rs.getDouble("price"));
+
+                    Timestamp ts = rs.getTimestamp("creation_datetime");
+                    if (ts != null) {
+                        product.setCreationDate(
+                                ts.toInstant()
+                                        .atZone(java.time.ZoneId.systemDefault())
+                                        .toLocalDate()
+                        );
+                    }
+
+                    product.setProductCategory(category);
+
+                    products.add(product);
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error while filtering products", e);
+        }
+
+        return products;
+    }
 }
 
