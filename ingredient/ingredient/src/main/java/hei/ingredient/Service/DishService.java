@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 
 @Service
 public class DishService {
@@ -48,4 +49,8 @@ public class DishService {
             throw new RuntimeException(e);
         }
     }
+    public List<DishEntity> findDishesByIngredientName(String name) {
+        return repository.findDishesByIngredientName(name);
+    }
+
 }

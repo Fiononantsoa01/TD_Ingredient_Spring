@@ -1,6 +1,7 @@
 package hei.ingredient.Repository;
 
 import hei.ingredient.Entity.Category;
+import hei.ingredient.Entity.DishEntity;
 import hei.ingredient.Entity.IngredientEntity;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -82,6 +83,77 @@ public class IngredientRepository {
                 return ingredient;
             }catch (SQLException e){
                 throw new RuntimeException(e);
+        }
+    }
+    public List<IngredientEntity> findIngredientsByCriteria(
+            String ingredientName,
+            Category category,
+            String dishName,
+            int page,
+            int size) {
+
+        List<IngredientEntity> ingredients = new ArrayList<>();
+
+        StringBuilder sql = new StringBuilder("""
+        SELECT i.id, i.name, i.price, i.category, i.id_dish
+        FROM ingredient i
+        LEFT JOIN dish d ON i.id_dish = d.id
+        WHERE 1=1
+    """);
+
+        List<Object> params = new ArrayList<>();
+
+        // 🔍 filtres dynamiques
+        if (ingredientName != null && !ingredientName.isBlank()) {
+            sql.append(" AND i.name ILIKE ?");
+            params.add("%" + ingredientName + "%");
+        }
+
+        if (category != null) {
+            sql.append(" AND i.category = ?::ingredient_category_enum");
+            params.add(category.name());
+        }
+
+        if (dishName != null && !dishName.isBlank()) {
+            sql.append(" AND d.name ILIKE ?");
+            params.add("%" + dishName + "%");
+        }
+
+        // 📄 pagination
+        sql.append(" ORDER BY i.id LIMIT ? OFFSET ?");
+        params.add(size);
+        params.add((page - 1) * size);
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            // inject params
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                IngredientEntity ing = new IngredientEntity();
+                ing.setId(rs.getInt("id"));
+                ing.setName(rs.getString("name"));
+                ing.setPrice(rs.getDouble("price"));
+                ing.setCategory(Category.valueOf(rs.getString("category")));
+
+                if (rs.getObject("id_dish") != null) {
+                    DishEntity dish = new DishEntity();
+                    dish.setId(rs.getInt("id_dish"));
+                    ing.setDish(dish);
+                }
+
+                ingredients.add(ing);
+            }
+
+            return ingredients;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error filtering ingredients", e);
         }
     }
 

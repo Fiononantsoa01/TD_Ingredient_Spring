@@ -1,6 +1,7 @@
 package hei.ingredient.Validator;
 
 import hei.ingredient.Entity.IngredientEntity;
+import hei.ingredient.Exception.BadRequestException;
 import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
@@ -25,6 +26,14 @@ public class IngredientValidator {
             if (!names.add(ing.getName())) {
                 throw new RuntimeException("Duplicate ingredient in input list: " + ing.getName());
             }
+        }
+    }
+    public void validateCriteria(int page, int size) {
+        if (page <= 0) {
+            throw new BadRequestException("Page must be greater than 0");
+        }
+        if (size <= 0) {
+            throw new BadRequestException("Size must be greater than 0");
         }
     }
 }

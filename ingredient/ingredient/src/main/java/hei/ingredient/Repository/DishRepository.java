@@ -128,4 +128,58 @@ public class DishRepository {
             }
         }
     }
+    public List<DishEntity> findDishesByIngredientName(String ingredientName) {
+        List<DishEntity> dishes = new ArrayList<>();
+
+        String sql = """
+        SELECT d.id as dish_id, d.name as dish_name, d.dish_type,
+               i.id as ing_id, i.name as ing_name, i.price, i.category
+        FROM dish d
+        JOIN ingredient i ON i.id_dish = d.id
+        WHERE i.name ILIKE ?
+        ORDER BY d.id
+        """;
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            // Recherche insensible à la casse
+            ps.setString(1, "%" + ingredientName + "%");
+
+            ResultSet rs = ps.executeQuery();
+
+            DishEntity currentDish = null;
+            int currentDishId = -1;
+
+            while (rs.next()) {
+                int dishId = rs.getInt("dish_id");
+
+                // Si nouveau plat
+                if (currentDish == null || currentDishId != dishId) {
+                    currentDish = new DishEntity();
+                    currentDish.setId(dishId);
+                    currentDish.setName(rs.getString("dish_name"));
+                    currentDish.setDishType(DishTypeEnum.valueOf(rs.getString("dish_type")));
+                    currentDish.setIngredients(new ArrayList<>());
+                    dishes.add(currentDish);
+                    currentDishId = dishId;
+                }
+
+                // Ajouter l'ingrédient
+                IngredientEntity ing = new IngredientEntity();
+                ing.setId(rs.getInt("ing_id"));
+                ing.setName(rs.getString("ing_name"));
+                ing.setPrice(rs.getDouble("price"));
+                ing.setCategory(Category.valueOf(rs.getString("category")));
+                currentDish.getIngredients().add(ing);
+            }
+
+            rs.close();
+            return dishes;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error fetching dishes by ingredient name", e);
+        }
+    }
+
 }

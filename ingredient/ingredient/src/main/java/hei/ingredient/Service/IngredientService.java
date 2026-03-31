@@ -1,5 +1,6 @@
 package hei.ingredient.Service;
 
+import hei.ingredient.Entity.Category;
 import hei.ingredient.Entity.IngredientEntity;
 import hei.ingredient.Repository.IngredientRepository;
 import hei.ingredient.Validator.IngredientValidator;
@@ -56,5 +57,16 @@ public class IngredientService {
         } catch (Exception e) {
             throw new RuntimeException("Error in createIngredients: " + e.getMessage(), e);
         }
+    }
+    public List<IngredientEntity> findIngredientsByCriteria(
+            String name,
+            Category category,
+            String dishName,
+            int page,
+            int size) {
+
+        validator.validateCriteria(page, size);
+
+        return repository.findIngredientsByCriteria(name, category, dishName, page, size);
     }
 }
