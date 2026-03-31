@@ -3,10 +3,7 @@ package hei.ingredient.Controller;
 import hei.ingredient.Entity.IngredientEntity;
 import hei.ingredient.Service.IngredientService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -26,5 +23,10 @@ public class IngredientController {
     ) {
         List<IngredientEntity> ingredients = service.getIngredients(page, size);
         return ResponseEntity.ok(ingredients);
+    }
+    @PostMapping
+    public ResponseEntity<List<IngredientEntity>> createIngredients(@RequestBody List<IngredientEntity> newIngredients) {
+        List<IngredientEntity> created = service.createIngredients(newIngredients);
+        return ResponseEntity.ok(created);
     }
 }
