@@ -1,6 +1,5 @@
 package hei.ingredient.Service;
 
-import hei.ingredient.Entity.Category;
 import hei.ingredient.Entity.IngredientEntity;
 import hei.ingredient.Repository.IngredientRepository;
 import hei.ingredient.Validator.IngredientValidator;
@@ -8,17 +7,18 @@ import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
-import java.sql.Statement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class IngredientService {
+
     private final IngredientRepository repository;
     private final IngredientValidator validator;
     private final DataSource dataSource;
 
-    public IngredientService(IngredientRepository repository, IngredientValidator validator,DataSource dataSource) {
+    public IngredientService(IngredientRepository repository, IngredientValidator validator, DataSource dataSource) {
         this.repository = repository;
         this.validator = validator;
         this.dataSource = dataSource;
@@ -26,47 +26,19 @@ public class IngredientService {
 
     public List<IngredientEntity> getIngredients(int page, int size) {
         validator.validatePagination(page, size);
-        return repository.findIngredients(page, size);
+        return repository.findAll(page, size);
     }
 
-    public List<IngredientEntity> createIngredients(List<IngredientEntity> newIngredients) {
-
-        if (newIngredients == null || newIngredients.isEmpty()) {
-            return List.of();
-        }
-
-        List<IngredientEntity> createdIngredients = new ArrayList<>();
-
+    public IngredientEntity saveIngredient(IngredientEntity ingredient) {
+        validator.validate(ingredient);
         try (Connection conn = dataSource.getConnection()) {
-
             conn.setAutoCommit(false);
-
-            for (IngredientEntity ingredient : newIngredients) {
-                if (repository.existsByName( ingredient.getName())) {
-                    throw new RuntimeException("Ingredient already exists: " + ingredient.getName());
-                }
-
-                // ✅ insert
-                IngredientEntity created = repository.insertIngredient( ingredient);
-                createdIngredients.add(created);
-            }
-
+            if (repository.existsByName(ingredient.getName())) throw new RuntimeException("Ingredient exists");
+            repository.insertIngredient(conn, ingredient);
             conn.commit();
-            return createdIngredients;
-
-        } catch (Exception e) {
-            throw new RuntimeException("Error in createIngredients: " + e.getMessage(), e);
+            return ingredient;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
-    }
-    public List<IngredientEntity> findIngredientsByCriteria(
-            String name,
-            Category category,
-            String dishName,
-            int page,
-            int size) {
-
-        validator.validateCriteria(page, size);
-
-        return repository.findIngredientsByCriteria(name, category, dishName, page, size);
     }
 }

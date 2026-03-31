@@ -8,49 +8,40 @@ import org.springframework.stereotype.Service;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.List;
 
 @Service
 public class DishService {
+
     private final DishRepository repository;
     private final DishValidator validator;
     private final DataSource dataSource;
-    public DishService(DishRepository repository,DataSource dataSource, DishValidator validator) {
+
+    public DishService(DishRepository repository, DataSource dataSource, DishValidator validator) {
         this.repository = repository;
         this.validator = validator;
         this.dataSource = dataSource;
     }
+
     public DishEntity getDishById(Integer id) {
         validator.validateId(id);
-            DishEntity dish = repository.findDishById(id);
-        return dish;
+        return repository.findDishById(id);
     }
-    public DishEntity saveDish(DishEntity dishToSave) {
 
-        validator.validate(dishToSave);
+    public DishEntity saveDish(DishEntity dish) {
+        validator.validate(dish);
         try (Connection conn = dataSource.getConnection()) {
-
             conn.setAutoCommit(false);
 
-            boolean exists = dishToSave.getId() != null &&
-                    repository.existsById( dishToSave.getId());
+            boolean exists = dish.getId() != null && repository.existsById(dish.getId());
 
-            if (!exists) {
-                int generatedId = repository.insert(conn, dishToSave);
-                dishToSave.setId(generatedId);
-            } else {
-                repository.update(conn, dishToSave);
-            }
-            repository.updateDishIngredients(conn, dishToSave);
+            if (!exists) repository.insert(conn, dish);
+            else repository.update(conn, dish);
 
             conn.commit();
-            return dishToSave;
+            return dish;
+
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
-    public List<DishEntity> findDishesByIngredientName(String name) {
-        return repository.findDishesByIngredientName(name);
-    }
-
 }

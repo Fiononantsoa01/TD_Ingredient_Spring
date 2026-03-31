@@ -15,9 +15,5 @@ public class IngredientEntity {
     private String name;
     private Double price;
     private Category category;
-    private DishEntity dish;
 
-    String getDishName() {
-        return dish.getName();
-    }
 }

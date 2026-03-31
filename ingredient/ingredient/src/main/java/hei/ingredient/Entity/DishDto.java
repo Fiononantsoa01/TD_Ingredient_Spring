@@ -10,10 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 @EqualsAndHashCode
-public class DishEntity {
-    private Integer id;
-    private String name;
-    private DishTypeEnum dishType;
-    private Double sellingPrice;
-
+public class DishDto {
+    private DishEntity dish;
+    private List<DishIngredientEntity> ingredients;
 }

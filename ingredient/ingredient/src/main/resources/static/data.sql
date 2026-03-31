@@ -24,3 +24,11 @@ INSERT INTO Ingredient (id, name, price, category, id_dish) VALUES
                                                                 (3, 'Poulet', 4500.00, 'ANIMAL', 2),
                                                                 (4, 'Chocolat', 3000.00, 'OTHER', 4),
                                                                 (5, 'Beurre', 2500.00, 'DAIRY', 4);
+CREATE TABLE DishIngredient (
+                                id SERIAL PRIMARY KEY,
+                                id_dish INT NOT NULL REFERENCES Dish(id) ON DELETE CASCADE,
+                                id_ingredient INT NOT NULL REFERENCES Ingredient(id) ON DELETE CASCADE,
+                                quantity_required NUMERIC(10,2) DEFAULT 1,
+                                unit VARCHAR(50) DEFAULT 'unit',
+                                UNIQUE (id_dish, id_ingredient)
+);
