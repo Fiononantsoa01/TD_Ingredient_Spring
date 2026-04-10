@@ -97,7 +97,7 @@ public class IngredientRepository {
         List<IngredientEntity> ingredients = new ArrayList<>();
 
         StringBuilder sql = new StringBuilder("""
-        SELECT i.id, i.name, i.price, i.category, i.id_dish
+        SELECT i.id, i.name, i.price, i.category, i.id_dish,d.name
         FROM ingredient i
         LEFT JOIN dish d ON i.id_dish = d.id
         WHERE 1=1
@@ -146,6 +146,7 @@ public class IngredientRepository {
                 if (rs.getObject("id_dish") != null) {
                     DishEntity dish = new DishEntity();
                     dish.setId(rs.getInt("id_dish"));
+                    dish.setName(rs.getString("name"));
                     ing.setDish(dish);
                 }
 
