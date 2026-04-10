@@ -75,9 +75,7 @@ public class IngredientRepository {
                 ps.setDouble(2, ingredient.getPrice());
                 ps.setObject(3, ingredient.getCategory().name(), java.sql.Types.OTHER);
                 ps.setObject(4, ingredient.getDish() != null ? ingredient.getDish().getId() : null);
-
                 ps.executeUpdate();
-
                 ResultSet rs = ps.getGeneratedKeys();
                 if (rs.next()) {
                     ingredient.setId(rs.getInt(1));
