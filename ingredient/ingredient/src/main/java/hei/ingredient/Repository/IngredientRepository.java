@@ -1,5 +1,6 @@
 package hei.ingredient.Repository;
 
+import hei.ingredient.DishIdDTO;
 import hei.ingredient.Entity.Category;
 import hei.ingredient.Entity.DishEntity;
 import hei.ingredient.Entity.IngredientEntity;
@@ -24,7 +25,7 @@ public class IngredientRepository {
         int offset = (page - 1) * size;
         List<IngredientEntity> ingredients = new ArrayList<>();
 
-        String sql = "SELECT id, name, price, category FROM ingredient ORDER BY id LIMIT ? OFFSET ?";
+        String sql = "SELECT id, name, price, category, id_dish  FROM ingredient ORDER BY id LIMIT ? OFFSET ?";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -39,6 +40,7 @@ public class IngredientRepository {
                 ing.setName(rs.getString("name"));
                 ing.setPrice(rs.getDouble("price"));
                 ing.setCategory(Category.valueOf(rs.getString("category")));
+                ing.setDish(new DishEntity(rs.getInt("id_dish")));
                 ingredients.add(ing);
             }
 
