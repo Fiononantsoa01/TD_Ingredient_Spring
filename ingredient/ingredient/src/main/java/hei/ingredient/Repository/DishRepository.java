@@ -77,6 +77,38 @@ public class DishRepository {
             throw new RuntimeException(e);
         }
     }
+    public boolean existsByName(String name) {
+        try (Connection conn = dataSource.getConnection()) {
+            String sql = "SELECT 1 FROM dish WHERE name = ?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, name);
+            ResultSet rs = ps.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public DishEntity findByName(String name) {
+        try (Connection conn = dataSource.getConnection()) {
+            String sql = "SELECT id, name, dish_type FROM dish WHERE name = ?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, name);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                DishEntity dish = new DishEntity();
+                dish.setId(rs.getInt("id"));
+                dish.setName(rs.getString("name"));
+                dish.setDishType(DishTypeEnum.valueOf(rs.getString("dish_type")));
+                return dish;
+            }
+            return null;
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
     public int insert(Connection conn, DishEntity dish) throws SQLException {
         String sql = "INSERT INTO dish(name, dish_type) VALUES (?, ?)";
 
