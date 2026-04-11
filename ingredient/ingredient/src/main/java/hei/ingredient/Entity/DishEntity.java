@@ -1,5 +1,6 @@
 package hei.ingredient.Entity;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 @EqualsAndHashCode
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class DishEntity {
     private Integer id;
     private String name;
@@ -23,5 +25,9 @@ public class DishEntity {
             }
         }
         throw new RuntimeException();
+    }
+
+    public DishEntity(Integer id) {
+        this.id = id;
     }
 }

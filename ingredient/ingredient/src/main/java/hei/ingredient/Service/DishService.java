@@ -31,15 +31,18 @@ public class DishService {
         try (Connection conn = dataSource.getConnection()) {
 
             conn.setAutoCommit(false);
-
-            boolean exists = dishToSave.getId() != null &&
-                    repository.existsById( dishToSave.getId());
-
-            if (!exists) {
+            DishEntity existingDish = repository.findByName(dishToSave.getName());
+            if (existingDish == null) {
+                // ✅ Nouveau dish
                 int generatedId = repository.insert(conn, dishToSave);
                 dishToSave.setId(generatedId);
-            } else {
-                repository.update(conn, dishToSave);
+
+            }
+               else {
+                    // ⚠️ Dish existe déjà
+                    // On garde ID et NAME existants
+                    dishToSave.setId(existingDish.getId());
+                    dishToSave.setName(existingDish.getName());
             }
             repository.updateDishIngredients(conn, dishToSave);
 
