@@ -22,7 +22,7 @@ public class DishController {
             DishEntity dish = dishService.getDishById(id);
             return ResponseEntity.ok(dish);
     }
-    @PostMapping
+   /* @PostMapping
     public ResponseEntity<DishEntity> saveDish(@RequestBody DishEntity dish) {
         try {
             DishEntity savedDish = dishService.saveDish(dish);
@@ -41,5 +41,5 @@ public class DishController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(dishes);
         }
         return ResponseEntity.ok(dishes);
-    }
+    }*/
 }

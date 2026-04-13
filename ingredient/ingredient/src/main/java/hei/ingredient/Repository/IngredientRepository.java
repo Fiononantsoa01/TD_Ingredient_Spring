@@ -21,11 +21,16 @@ public class IngredientRepository {
         this.dataSource = dataSource;
     }
 
-    public List<IngredientEntity> findIngredients(int page, int size) {
+   public List<IngredientEntity> findIngredients(int page, int size) {
         int offset = (page - 1) * size;
         List<IngredientEntity> ingredients = new ArrayList<>();
 
-        String sql = "SELECT id, name, price, category, id_dish  FROM ingredient ORDER BY id LIMIT ? OFFSET ?";
+        String sql = """
+SELECT i.id, i.name, i.price, i.category, di.id_dish  
+FROM ingredient i inner join dishIngredient di 
+on i.id=di.id_ingredient
+ORDER BY id LIMIT ? OFFSET ?
+""";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -40,7 +45,9 @@ public class IngredientRepository {
                 ing.setName(rs.getString("name"));
                 ing.setPrice(rs.getDouble("price"));
                 ing.setCategory(Category.valueOf(rs.getString("category")));
-                ing.setDish(new DishEntity(rs.getInt("id_dish")));
+                DishEntity dish = new DishEntity();
+                dish.setId(rs.getInt("id_dish"));
+                ing.setDish(dish);
                 ingredients.add(ing);
             }
 
@@ -50,6 +57,7 @@ public class IngredientRepository {
             throw new RuntimeException(e);
         }
     };
+    /**
     public boolean existsByName(String name) {
         try (Connection conn=dataSource.getConnection()) {
             String sql = "SELECT COUNT(1) FROM ingredient WHERE name = ?";
@@ -156,6 +164,6 @@ public class IngredientRepository {
         } catch (SQLException e) {
             throw new RuntimeException("Error filtering ingredients", e);
         }
-    }
+    }*/
 
 }

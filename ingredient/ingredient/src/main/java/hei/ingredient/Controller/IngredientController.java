@@ -21,10 +21,11 @@ public class IngredientController {
     public ResponseEntity<List<IngredientEntity>> getIngredients(
             @RequestParam int page,
             @RequestParam int size
-    ) {
+    )
+    {
         List<IngredientEntity> ingredients = service.getIngredients(page, size);
         return ResponseEntity.ok(ingredients);
-    }
+    }/*
     @PostMapping
     public ResponseEntity<List<IngredientEntity>> createIngredients(@RequestBody List<IngredientEntity> newIngredients) {
         List<IngredientEntity> created = service.createIngredients(newIngredients);
@@ -46,5 +47,5 @@ public class IngredientController {
         }
 
         return ResponseEntity.ok(result); // 200
-    }
+    }*/
 }

@@ -16,7 +16,8 @@ public class IngredientEntity {
     private Integer id;
     private String name;
     private Double price;
-    private Category category;;
+    private Category category;
+    private DishEntity dish;
 
 
   /*  String getDishName() {
