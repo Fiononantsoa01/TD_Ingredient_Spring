@@ -25,7 +25,7 @@ public class DishService {
             DishEntity dish = repository.findDishById(id);
         return dish;
     }
-    public DishEntity saveDish(DishEntity dishToSave) {
+  /*  public DishEntity saveDish(DishEntity dishToSave) {
 
         validator.validate(dishToSave);
         try (Connection conn = dataSource.getConnection()) {
@@ -51,7 +51,7 @@ public class DishService {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-    }
+    }*/
     public List<DishEntity> findDishesByIngredientName(String name) {
         return repository.findDishesByIngredientName(name);
     }

@@ -57,7 +57,7 @@ public class IngredientService {
         } catch (Exception e) {
             throw new RuntimeException("Error in createIngredients: " + e.getMessage(), e);
         }
-    }
+    }/**
     public List<IngredientEntity> findIngredientsByCriteria(
             String name,
             Category category,
@@ -68,5 +68,5 @@ public class IngredientService {
         validator.validateCriteria(page, size);
 
         return repository.findIngredientsByCriteria(name, category, dishName, page, size);
-    }
+    }*/
 }

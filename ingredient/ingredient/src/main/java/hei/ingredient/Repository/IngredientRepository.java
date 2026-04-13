@@ -57,7 +57,7 @@ ORDER BY id LIMIT ? OFFSET ?
             throw new RuntimeException(e);
         }
     };
-    /**
+
     public boolean existsByName(String name) {
         try (Connection conn=dataSource.getConnection()) {
             String sql = "SELECT COUNT(1) FROM ingredient WHERE name = ?";
@@ -75,14 +75,15 @@ ORDER BY id LIMIT ? OFFSET ?
         }
     }
         public IngredientEntity insertIngredient(IngredientEntity ingredient)  {
-            String sql = "INSERT INTO ingredient (name, price, category, id_dish) VALUES (?, ?, ?, ?)";
+           /* String sql = "INSERT INTO ingredient (name, price, category, id_dish) VALUES (?, ?, ?, ?)";*/
+            String sql = "INSERT INTO ingredient (name, price, category) VALUES (?, ?, ?)";
             KeyHolder keyHolder = new GeneratedKeyHolder();
             try (Connection conn=dataSource.getConnection()) {
                 PreparedStatement ps=conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
                 ps.setString(1, ingredient.getName());
                 ps.setDouble(2, ingredient.getPrice());
                 ps.setObject(3, ingredient.getCategory().name(), java.sql.Types.OTHER);
-                ps.setObject(4, ingredient.getDish() != null ? ingredient.getDish().getId() : null);
+               /* ps.setObject(4, ingredient.getDish() != null ? ingredient.getDish().getId() : null);*/
                 ps.executeUpdate();
                 ResultSet rs = ps.getGeneratedKeys();
                 if (rs.next()) {
@@ -93,7 +94,7 @@ ORDER BY id LIMIT ? OFFSET ?
                 throw new RuntimeException(e);
         }
     }
-    public List<IngredientEntity> findIngredientsByCriteria(
+  /*  public List<IngredientEntity> findIngredientsByCriteria(
             String ingredientName,
             Category category,
             String dishName,
@@ -164,6 +165,6 @@ ORDER BY id LIMIT ? OFFSET ?
         } catch (SQLException e) {
             throw new RuntimeException("Error filtering ingredients", e);
         }
-    }*/
-
+    }
+*/
 }

@@ -31,7 +31,7 @@ public class DishController {
         } catch (BadRequestException e) {
             return ResponseEntity.badRequest().build();
         }
-    }
+    }*/
     @GetMapping("/search")
     public ResponseEntity<List<DishEntity>> searchByIngredient(
             @RequestParam String ingredientName) {
@@ -41,5 +41,5 @@ public class DishController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(dishes);
         }
         return ResponseEntity.ok(dishes);
-    }*/
+    }
 }

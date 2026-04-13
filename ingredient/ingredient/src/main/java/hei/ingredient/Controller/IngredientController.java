@@ -25,12 +25,12 @@ public class IngredientController {
     {
         List<IngredientEntity> ingredients = service.getIngredients(page, size);
         return ResponseEntity.ok(ingredients);
-    }/*
+    }
     @PostMapping
     public ResponseEntity<List<IngredientEntity>> createIngredients(@RequestBody List<IngredientEntity> newIngredients) {
         List<IngredientEntity> created = service.createIngredients(newIngredients);
         return ResponseEntity.ok(created);
-    }
+    }/*
     @GetMapping("/search")
     public ResponseEntity<List<IngredientEntity>> searchIngredients(
             @RequestParam(required = false) String ingredientName,
