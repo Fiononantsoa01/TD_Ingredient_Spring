@@ -94,7 +94,7 @@ ORDER BY id LIMIT ? OFFSET ?
                 throw new RuntimeException(e);
         }
     }
-  /*  public List<IngredientEntity> findIngredientsByCriteria(
+   public List<IngredientEntity> findIngredientsByCriteria(
             String ingredientName,
             Category category,
             String dishName,
@@ -104,9 +104,9 @@ ORDER BY id LIMIT ? OFFSET ?
         List<IngredientEntity> ingredients = new ArrayList<>();
 
         StringBuilder sql = new StringBuilder("""
-        SELECT i.id, i.name, i.price, i.category, i.id_dish,d.name
-        FROM ingredient i
-        LEFT JOIN dish d ON i.id_dish = d.id
+        SELECT i.id, i.name, i.price, i.category, di.id_dish,d.name
+        FROM ingredient i JOIN dishIngredient di ON i.id = di.id_ingredient
+        JOIN dish d ON di.id_dish = d.id
         WHERE 1=1
     """);
 
@@ -166,5 +166,5 @@ ORDER BY id LIMIT ? OFFSET ?
             throw new RuntimeException("Error filtering ingredients", e);
         }
     }
-*/
+
 }
