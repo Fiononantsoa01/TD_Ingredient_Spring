@@ -104,7 +104,7 @@ ORDER BY id LIMIT ? OFFSET ?
         List<IngredientEntity> ingredients = new ArrayList<>();
 
         StringBuilder sql = new StringBuilder("""
-        SELECT i.id, i.name, i.price, i.category, di.id_dish,d.name
+        SELECT i.id, i.name, i.price, i.category, di.id_dish,d.name as dishName
         FROM ingredient i JOIN dishIngredient di ON i.id = di.id_ingredient
         JOIN dish d ON di.id_dish = d.id
         WHERE 1=1
@@ -153,7 +153,7 @@ ORDER BY id LIMIT ? OFFSET ?
                 if (rs.getObject("id_dish") != null) {
                     DishEntity dish = new DishEntity();
                     dish.setId(rs.getInt("id_dish"));
-                    dish.setName(rs.getString("name"));
+                    dish.setName(rs.getString("dishName"));
                     ing.setDish(dish);
                 }
 

@@ -1,6 +1,7 @@
 package hei.ingredient.Controller;
 
 import hei.ingredient.Entity.DishEntity;
+import hei.ingredient.Entity.DishIngredientEntity;
 import hei.ingredient.Exception.BadRequestException;
 import hei.ingredient.Service.DishService;
 import org.springframework.http.HttpStatus;
@@ -22,7 +23,7 @@ public class DishController {
             DishEntity dish = dishService.getDishById(id);
             return ResponseEntity.ok(dish);
     }
-   /* @PostMapping
+   /*@PostMapping
     public ResponseEntity<DishEntity> saveDish(@RequestBody DishEntity dish) {
         try {
             DishEntity savedDish = dishService.saveDish(dish);
@@ -32,6 +33,15 @@ public class DishController {
             return ResponseEntity.badRequest().build();
         }
     }*/
+   @PutMapping("/{dishId}/ingredients")
+   public ResponseEntity<?> saveDish(
+           @PathVariable Integer dishId,
+           @RequestBody List<DishIngredientEntity> list) {
+
+       dishService.saveDish(dishId, list);
+
+       return ResponseEntity.ok("Updated successfully");
+   }
     @GetMapping("/search")
     public ResponseEntity<List<DishEntity>> searchByIngredient(
             @RequestParam String ingredientName) {

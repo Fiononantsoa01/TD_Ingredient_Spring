@@ -16,6 +16,7 @@ public class DishEntity {
     private Integer id;
     private String name;
     private DishTypeEnum dishType;
+   /* private List<IngredientEntity> ingrediens;*/
     private List<DishIngredientEntity> ingredients;
     private Double price;
 

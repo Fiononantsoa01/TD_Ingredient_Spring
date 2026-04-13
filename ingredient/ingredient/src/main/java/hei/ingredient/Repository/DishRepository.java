@@ -85,108 +85,14 @@ public class DishRepository {
             throw new RuntimeException(e);
         }
     }
-    /*public boolean existsById( Integer id)  {
-        try (Connection conn=dataSource.getConnection()) {
-            String sql = "SELECT 1 FROM dish WHERE id = ?";
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
-            return rs.next();
-        }catch (SQLException e){
-            throw new RuntimeException(e);
-        }
-    }
-    public boolean existsByName(String name) {
-        try (Connection conn = dataSource.getConnection()) {
-            String sql = "SELECT 1 FROM dish WHERE name = ?";
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, name);
-            ResultSet rs = ps.executeQuery();
-            return rs.next();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    public DishEntity findByName(String name) {
-        try (Connection conn = dataSource.getConnection()) {
-            String sql = "SELECT id, name, dish_type FROM dish WHERE name = ?";
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, name);
-
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                DishEntity dish = new DishEntity();
-                dish.setId(rs.getInt("id"));
-                dish.setName(rs.getString("name"));
-                dish.setDishType(DishTypeEnum.valueOf(rs.getString("dish_type")));
-                return dish;
-            }
-            return null;
-
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    public int insert(Connection conn, DishEntity dish) throws SQLException {
-        String sql = "INSERT INTO dish(name, dish_type) VALUES (?, ?)";
-
-        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
-            ps.setString(1, dish.getName());
-            ps.setObject(2, dish.getDishType().name(),java.sql.Types.OTHER);
-
-            ps.executeUpdate();
-
-            ResultSet rs = ps.getGeneratedKeys();
-            if (rs.next()) {
-                int generatedId = rs.getInt(1);
-                dish.setId(generatedId);
-                return generatedId; // retourne l’ID généré
-            } else {
-                throw new SQLException("No ID generated");
-            }
-        }
-    }
-    public void update(Connection conn, DishEntity dish) throws SQLException {
-        String sql = "UPDATE dish SET name = ?, dish_type = ? WHERE id = ?";
-
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, dish.getName());
-            ps.setObject(2, dish.getDishType().name(),java.sql.Types.OTHER);
-            ps.setInt(3, dish.getId());
-            ps.executeUpdate();
-        }
-    }
-    public void updateDishIngredients(Connection conn, DishEntity dish) throws SQLException {
-
-        // 1. supprimer anciennes associations
-        String deleteSql = "UPDATE ingredient SET id_dish = NULL WHERE id_dish = ?";
-        try (PreparedStatement ps = conn.prepareStatement(deleteSql)) {
-            ps.setInt(1, dish.getId());
-            ps.executeUpdate();
-        }
-        if (dish.getIngredients() != null) {
-            String updateSql = "UPDATE ingredient SET id_dish = ? WHERE id = ?";
-            try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
-
-                for (IngredientEntity ing : dish.getIngredients()) {
-                    ps.setInt(1, dish.getId());
-                    ps.setInt(2, ing.getId());
-                    ps.addBatch();
-                }
-                ps.executeBatch();
-            }
-        }
-    }
     public List<DishEntity> findDishesByIngredientName(String ingredientName) {
         List<DishEntity> dishes = new ArrayList<>();
 
         String sql = """
         SELECT d.id as dish_id, d.name as dish_name, d.dish_type,
                i.id as ing_id, i.name as ing_name, i.price, i.category
-        FROM dish d
-        JOIN ingredient i ON i.id_dish = d.id
+        FROM dish d JOIN dishIngredient di ON di.id_dish = d.id
+            join ingredient i ON i.id=di.id_ingredient
         WHERE i.name ILIKE ?
         ORDER BY d.id
         """;
@@ -217,12 +123,15 @@ public class DishRepository {
                 }
 
                 // Ajouter l'ingrédient
+                DishIngredientEntity dishIngredient = new DishIngredientEntity();
                 IngredientEntity ing = new IngredientEntity();
                 ing.setId(rs.getInt("ing_id"));
                 ing.setName(rs.getString("ing_name"));
                 ing.setPrice(rs.getDouble("price"));
                 ing.setCategory(Category.valueOf(rs.getString("category")));
-                currentDish.getIngredients().add(ing);
+                dishIngredient.setIngredient(ing);
+                currentDish.getIngredients().add(dishIngredient);
+
             }
 
             rs.close();
@@ -231,6 +140,210 @@ public class DishRepository {
         } catch (SQLException e) {
             throw new RuntimeException("Error fetching dishes by ingredient name", e);
         }
+    }
+
+
+   public boolean existsById( Integer id)  {
+        try (Connection conn=dataSource.getConnection()) {
+            String sql = "SELECT 1 FROM dish WHERE id = ?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            return rs.next();
+        }catch (SQLException e){
+            throw new RuntimeException(e);
+        }
+    }
+    /** ** ne sert à rien
+    public boolean existsByName(String name) {
+        try (Connection conn = dataSource.getConnection()) {
+            String sql = "SELECT 1 FROM dish WHERE name = ?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, name);
+            ResultSet rs = ps.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }*/
+  /*
+  **  pour l'ancien version avec deux table
+  public DishEntity findByName(String name) {
+        try (Connection conn = dataSource.getConnection()) {
+            String sql = "SELECT id, name, dish_type FROM dish WHERE name = ?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, name);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                DishEntity dish = new DishEntity();
+                dish.setId(rs.getInt("id"));
+                dish.setName(rs.getString("name"));
+                dish.setDishType(DishTypeEnum.valueOf(rs.getString("dish_type")));
+                return dish;
+            }
+            return null;
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }*/
+
+   /* public int insert(Connection conn, DishEntity dish) throws SQLException {
+        String sql = "INSERT INTO dish(name, dish_type) VALUES (?, ?)";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            ps.setString(1, dish.getName());
+            ps.setObject(2, dish.getDishType().name(),java.sql.Types.OTHER);
+
+            ps.executeUpdate();
+
+            ResultSet rs = ps.getGeneratedKeys();
+            if (rs.next()) {
+                int generatedId = rs.getInt(1);
+                dish.setId(generatedId);
+                return generatedId; // retourne l’ID généré
+            } else {
+                throw new SQLException("No ID generated");
+            }
+        }
+    }*/
+
+  /*  public void update(Connection conn, DishEntity dish) throws SQLException {
+        String sql = "UPDATE dish SET name = ?, dish_type = ? WHERE id = ?";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, dish.getName());
+            ps.setObject(2, dish.getDishType().name(),java.sql.Types.OTHER);
+            ps.setInt(3, dish.getId());
+            ps.executeUpdate();
+        }
+    }*/
+
+       /*
+    public void updateDishIngredients(Connection conn, DishEntity dish) throws SQLException {
+
+        // 1. supprimer anciennes associations
+        String deleteSql = "UPDATE dishIngredient SET id_ingredient = NULL WHERE id_dish = ?";
+        try (PreparedStatement ps = conn.prepareStatement(deleteSql)) {
+            ps.setInt(1, dish.getId());
+            ps.executeUpdate();
+        }
+        //2. associer
+        if (dish.getIngredients() != null) {
+            String updateSql = "UPDATE dishIngredient SET id_dish = ? WHERE id = ?";
+            try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
+
+                for (DishIngredientEntity ing : dish.getIngredients()) {
+                    ps.setInt(1, dish.getId());
+                    ps.setInt(2, ing.getId());
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+        }*/
+/*
+** pour le manyToMany mais plus avance, pas encore terminer
+public DishIngredientEntity findByDIshAndIngredient(DishEntity dish, IngredientEntity ingredient) {
+    try (Connection conn = dataSource.getConnection()){
+        String sql = "select from dihIngredient where dish_id=? and ingredient_id=?";
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ps.setInt(1, dish.getId());
+        ps.setInt(2, ingredient.getId());
+        ResultSet rs = ps.executeQuery();
+        if (rs.next()) {
+            DishIngredientEntity dishIngredient = new DishIngredientEntity();
+            IngredientEntity ing = new IngredientEntity();
+            ing.setId(rs.getInt("ing_id"));
+            DishEntity dsh = new DishEntity();
+            dsh.setId(rs.getInt("dish_id"));
+            dishIngredient.setDish(dsh);
+            dishIngredient.setIngredient(ing);
+            return dishIngredient;
+        }
+        return null;
+    }catch (
+            SQLException e
+    ){
+        throw new RuntimeException(e);
+    }
+}
+    public  int insert(Connection conn,DishIngredientEntity dishIngredient) {
+        String insert = "insert into dishIngredient(id_dish, id_ingredient, quantity_required, unit) values(?,?,?,?)";
+        try(PreparedStatement psIns= conn.prepareStatement(insert, Statement.RETURN_GENERATED_KEYS)){
+            psIns.setInt(1, dishIngredient.getDish().getId());
+            psIns.setInt(2, dishIngredient.getIngredient().getId());
+            psIns.setDouble(3,dishIngredient.getQuantity());
+            psIns.setObject(4,dishIngredient.getUnit().name(),java.sql.Types.OTHER);
+            psIns.executeUpdate();
+            ResultSet rs = psIns.getGeneratedKeys();
+            if(rs.next()){
+                int id = rs.getInt(1);
+                dishIngredient.setId(id);
+                return dishIngredient.getId();
+
+            }else {
+                throw new RuntimeException("Insert failed");
+            }
+
+        }catch (SQLException e){
+            throw new RuntimeException(e);
+        }
+    }
+    public  int update(Connection conn,DishIngredientEntity dishIngredient) {
+        String upSql = "update dishIngredient set quantity_required=?,unit=? where id=?";
+        try (PreparedStatement psUp = conn.prepareStatement(upSql)) {
+            psUp.setDouble(1, dishIngredient.getQuantity());
+            psUp.setObject(2, dishIngredient.getUnit());
+            psUp.executeUpdate();
+            return dishIngredient.getId();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public  int delete(Connection conn,DishIngredientEntity dishIngredient) {
+        String deleteSql = "delete from dishIngredient where id=?";
+        try (PreparedStatement ps= conn.prepareStatement(deleteSql)){
+            ps.setInt(1, dishIngredient.getId());
+            ps.executeUpdate();
+        }
+        catch (SQLException e){
+            throw new RuntimeException(e);
+        }
+    }*/
+       public void updateDishIngredients(Integer dishId, List<DishIngredientEntity> ingredients) {
+           String deleteSql = "DELETE FROM dishIngredient WHERE id_dish= ?";
+           String insertSql = "insert into dishIngredient(id_dish, id_ingredient, quantity_required, unit) values(?,?,?,?)";
+
+           try (Connection conn = dataSource.getConnection()) {
+
+               conn.setAutoCommit(false);
+
+               // 1. supprimer anciens
+               try (PreparedStatement deletePs = conn.prepareStatement(deleteSql)) {
+                   deletePs.setInt(1, dishId);
+                   deletePs.executeUpdate();
+               }
+                // créer nouveau
+               try (PreparedStatement psInsert = conn.prepareStatement(insertSql)) {
+                   for (DishIngredientEntity di : ingredients) {
+                       psInsert.setInt(1, dishId);
+                       psInsert.setInt(2, di.getIngredient().getId());
+                       psInsert.setDouble(3, di.getQuantity());
+                       psInsert.setObject(4, di.getUnit().name(), java.sql.Types.OTHER);
+                       psInsert.addBatch();
+                   }
+
+                   psInsert.executeBatch();
+               }
+
+               conn.commit();
+
+           } catch (SQLException e) {
+               throw new RuntimeException(e);
+           }
+       }
 
 }
