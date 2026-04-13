@@ -32,12 +32,22 @@ public class DishEntity {
     public DishEntity(Integer id) {
         this.id = id;
     }*/
-    Double getDishCost(){
-        DishEntity dish=new DishEntity();
-        return dish.getPrice();
+    Double getDishCost(List<DishIngredientEntity> ingredients) {
+        Double totalPrice=0.0;
+        for(DishIngredientEntity e:ingredients){
+            Double quantity= e.getQuantity();
+            Double unitPrice=e.getIngredient().getPrice();
+            totalPrice=totalPrice+quantity*unitPrice;
+        }
+        return totalPrice;
     }
-    Double getGrossMargin(){
-        DishEntity dish=new DishEntity();
-        return dish.getPrice();
+    Double getDishMargin(DishEntity dish, List<DishIngredientEntity> ingredients) {
+
+        if (dish.getPrice() == null) {
+            throw new RuntimeException("Le prix de vente du plat est null");
+        }
+
+        double cost = getDishCost(ingredients);
+        return dish.getPrice() - cost;
     }
 }
