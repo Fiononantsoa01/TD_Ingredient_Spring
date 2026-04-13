@@ -1,9 +1,6 @@
 package hei.ingredient.Repository;
 
-import hei.ingredient.Entity.Category;
-import hei.ingredient.Entity.DishEntity;
-import hei.ingredient.Entity.DishTypeEnum;
-import hei.ingredient.Entity.IngredientEntity;
+import hei.ingredient.Entity.*;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
@@ -31,7 +28,7 @@ public class DishRepository {
 
                 rsDish.close();
                 psDish.close();
-                String sqlIngredients = "SELECT id, name, price, category FROM ingredient WHERE id_dish = ?";
+               /** String sqlIngredients = "SELECT id, name, price, category FROM ingredient WHERE id_dish = ?";
                 PreparedStatement psIng = conn.prepareStatement(sqlIngredients);
                 psIng.setInt(1, id);
                 ResultSet rsIng = psIng.executeQuery();
@@ -49,7 +46,29 @@ public class DishRepository {
                 dish.setIngredients(ingredients);
 
                 rsIng.close();
-                psIng.close();
+                psIng.close();*/
+                String sqlIngredients= """
+                        SELECT i.id, i.name, i.price, i.category FROM ingredient i
+                         inner join dishIngredient di on i.id= di.id_ingredient
+                         where di.id_dish = ? """;
+                PreparedStatement psIngredients = conn.prepareStatement(sqlIngredients);
+                psIngredients.setInt(1, id);
+                ResultSet rsIngredients = psIngredients.executeQuery();
+                List<DishIngredientEntity> ingredients = new ArrayList<>();
+                while (rsIngredients.next()) {
+                    DishIngredientEntity dishIngredient = new DishIngredientEntity();
+                    IngredientEntity ingredient = new IngredientEntity();
+                    ingredient.setId(rsIngredients.getInt("id"));
+                    ingredient.setName(rsIngredients.getString("name"));
+                    ingredient.setPrice(rsIngredients.getDouble("price"));
+                    ingredient.setCategory(Category.valueOf(rsIngredients.getString("category")));
+                    dishIngredient.setIngredient(ingredient);
+                    ingredients.add(dishIngredient);
+                }
+                dish.setIngredients(ingredients);
+                rsIngredients.close();
+                psIngredients.close();
+
                 conn.close();
 
                 return dish;
@@ -66,7 +85,7 @@ public class DishRepository {
             throw new RuntimeException(e);
         }
     }
-    public boolean existsById( Integer id)  {
+    /*public boolean existsById( Integer id)  {
         try (Connection conn=dataSource.getConnection()) {
             String sql = "SELECT 1 FROM dish WHERE id = ?";
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -212,6 +231,6 @@ public class DishRepository {
         } catch (SQLException e) {
             throw new RuntimeException("Error fetching dishes by ingredient name", e);
         }
-    }
+    }*/
 
 }
