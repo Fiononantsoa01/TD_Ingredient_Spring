@@ -16,17 +16,10 @@ public class IngredientEntity {
     private Integer id;
     private String name;
     private Double price;
-    private Category category;
-    private DishEntity dish;
+    private Category category;;
 
-    public IngredientEntity(Integer id, String name, Double price, Category category) {
-        this.id = id;
-        this.name = name;
-        this.price = price;
-        this.category = category;
-    }
 
-    String getDishName() {
+  /*  String getDishName() {
         return dish.getName();
-    }
+    }*/
 }
