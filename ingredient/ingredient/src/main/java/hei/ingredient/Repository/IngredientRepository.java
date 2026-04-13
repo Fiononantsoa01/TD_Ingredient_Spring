@@ -1,9 +1,7 @@
 package hei.ingredient.Repository;
 
 import hei.ingredient.DishIdDTO;
-import hei.ingredient.Entity.Category;
-import hei.ingredient.Entity.DishEntity;
-import hei.ingredient.Entity.IngredientEntity;
+import hei.ingredient.Entity.*;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
@@ -163,6 +161,37 @@ ORDER BY id LIMIT ? OFFSET ?
             return ingredients;
 
         } catch (SQLException e) {
+            throw new RuntimeException("Error filtering ingredients", e);
+        }
+    }
+    public List<DishIngredientEntity> findIngredientByDishid(Integer dishId) {
+        List<DishIngredientEntity> ingredients = new ArrayList<>();
+        String sql= """
+                select i.id as ingId, i.name as ingName, category ingCate,di.id_dish AS dish_id, di.quantity_required,di.unit
+                from dishIngredient di join ingredient i  on  i.id=di.id_ingredient
+                join dish d on di.id_dish = d.id
+                where di.id_dish = ?""";
+
+        try (Connection con=dataSource.getConnection()){
+            PreparedStatement ps=con.prepareStatement(sql);
+            ps.setInt(1, dishId);
+            ResultSet rs=ps.executeQuery();
+            while (rs.next()){
+                DishIngredientEntity ing = new DishIngredientEntity();
+                IngredientEntity i=new IngredientEntity();
+                i.setId(rs.getInt("ingId"));
+                i.setName(rs.getString("ingName"));
+                i.setCategory(Category.valueOf(rs.getString("ingCate")));
+                ing.setIngredient(i);
+                DishEntity d=new DishEntity();
+                d.setId(rs.getInt("dish_id"));
+                ing.setDish(d);
+                ing.setQuantity(rs.getDouble("quantity_required"));
+                ing.setUnit(UnitEnum.valueOf(rs.getString("unit")));
+                ingredients.add(ing);
+            }
+            return ingredients;
+        }catch (SQLException e){
             throw new RuntimeException("Error filtering ingredients", e);
         }
     }

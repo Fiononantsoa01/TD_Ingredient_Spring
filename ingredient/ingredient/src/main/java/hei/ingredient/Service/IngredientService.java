@@ -1,6 +1,7 @@
 package hei.ingredient.Service;
 
 import hei.ingredient.Entity.Category;
+import hei.ingredient.Entity.DishIngredientEntity;
 import hei.ingredient.Entity.IngredientEntity;
 import hei.ingredient.Repository.IngredientRepository;
 import hei.ingredient.Validator.IngredientValidator;
@@ -28,6 +29,10 @@ public class IngredientService {
         validator.validatePagination(page, size);
         return repository.findIngredients(page, size);
     }
+    public List<DishIngredientEntity> getIngredientByDish(Integer dishId) {
+        return repository.findIngredientByDishid(dishId);
+    }
+
 
     public List<IngredientEntity> createIngredients(List<IngredientEntity> newIngredients) {
 

@@ -1,6 +1,7 @@
 package hei.ingredient.Controller;
 
 import hei.ingredient.Entity.Category;
+import hei.ingredient.Entity.DishIngredientEntity;
 import hei.ingredient.Entity.IngredientEntity;
 import hei.ingredient.Service.IngredientService;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,12 @@ public class IngredientController {
     )
     {
         List<IngredientEntity> ingredients = service.getIngredients(page, size);
+        return ResponseEntity.ok(ingredients);
+    }
+    @GetMapping("/searchByDish/{idDish}")
+    public ResponseEntity<List<DishIngredientEntity>> getIngredientsByDish(@PathVariable Integer idDish)
+    {
+        List<DishIngredientEntity> ingredients= service.getIngredientByDish(idDish);
         return ResponseEntity.ok(ingredients);
     }
     @PostMapping
