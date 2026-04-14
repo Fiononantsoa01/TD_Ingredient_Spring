@@ -45,7 +45,7 @@ ORDER BY id LIMIT ? OFFSET ?
                 ing.setCategory(Category.valueOf(rs.getString("category")));
                 DishEntity dish = new DishEntity();
                 dish.setId(rs.getInt("id_dish"));
-                ing.setDish(dish);
+                /*ing.setDish(dish);*/
                 ingredients.add(ing);
             }
 
@@ -72,8 +72,8 @@ ORDER BY id LIMIT ? OFFSET ?
             throw new RuntimeException(e);
         }
     }
-        public IngredientEntity insertIngredient(IngredientEntity ingredient)  {
-           /* String sql = "INSERT INTO ingredient (name, price, category, id_dish) VALUES (?, ?, ?, ?)";*/
+     /*   public IngredientEntity insertIngredient(IngredientEntity ingredient)  {
+           /* String sql = "INSERT INTO ingredient (name, price, category, id_dish) VALUES (?, ?, ?, ?)";
             String sql = "INSERT INTO ingredient (name, price, category) VALUES (?, ?, ?)";
             KeyHolder keyHolder = new GeneratedKeyHolder();
             try (Connection conn=dataSource.getConnection()) {
@@ -81,7 +81,7 @@ ORDER BY id LIMIT ? OFFSET ?
                 ps.setString(1, ingredient.getName());
                 ps.setDouble(2, ingredient.getPrice());
                 ps.setObject(3, ingredient.getCategory().name(), java.sql.Types.OTHER);
-               /* ps.setObject(4, ingredient.getDish() != null ? ingredient.getDish().getId() : null);*/
+               /* ps.setObject(4, ingredient.getDish() != null ? ingredient.getDish().getId() : null);
                 ps.executeUpdate();
                 ResultSet rs = ps.getGeneratedKeys();
                 if (rs.next()) {
@@ -91,8 +91,27 @@ ORDER BY id LIMIT ? OFFSET ?
             }catch (SQLException e){
                 throw new RuntimeException(e);
         }
-    }
-   public List<IngredientEntity> findIngredientsByCriteria(
+    }*/
+     public int insertIngredient( Connection conn,IngredientEntity ingredient) throws SQLException {
+
+         String sql = "INSERT INTO ingredient (name, price, category) VALUES (?, ?, ?) RETURNING id";
+
+         try (PreparedStatement ps = conn.prepareStatement(sql);) {
+
+             ps.setString(1, ingredient.getName());
+             ps.setDouble(2, ingredient.getPrice());
+             ps.setObject(3, ingredient.getCategory().name(), java.sql.Types.OTHER);
+
+             ResultSet rs = ps.executeQuery();
+             if (rs.next()) {
+                 return rs.getInt("id");
+             }
+         }
+
+         throw new SQLException("Failed to insert ingredient");
+     }
+
+    public List<IngredientEntity> findIngredientsByCriteria(
             String ingredientName,
             Category category,
             String dishName,
@@ -152,7 +171,7 @@ ORDER BY id LIMIT ? OFFSET ?
                     DishEntity dish = new DishEntity();
                     dish.setId(rs.getInt("id_dish"));
                     dish.setName(rs.getString("dishName"));
-                    ing.setDish(dish);
+                   /* ing.setDish(dish);*/
                 }
 
                 ingredients.add(ing);

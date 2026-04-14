@@ -33,11 +33,15 @@ public class IngredientController {
         List<DishIngredientEntity> ingredients= service.getIngredientByDish(idDish);
         return ResponseEntity.ok(ingredients);
     }
-    @PostMapping
+    /*@PostMapping
     public ResponseEntity<List<IngredientEntity>> createIngredients(@RequestBody List<IngredientEntity> newIngredients) {
         List<IngredientEntity> created = service.createIngredients(newIngredients);
         return ResponseEntity.ok(created);
+    }*/@PostMapping
+    public IngredientEntity createIngredients(@RequestBody IngredientEntity newIngredients) {
+        return service.saveIngredients(newIngredients);
     }
+
     @GetMapping("/search")
     public ResponseEntity<List<IngredientEntity>> searchIngredients(
             @RequestParam(required = false) String ingredientName,
