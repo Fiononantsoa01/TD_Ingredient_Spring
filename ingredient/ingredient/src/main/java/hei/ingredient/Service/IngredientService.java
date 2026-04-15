@@ -37,6 +37,9 @@ public class IngredientService {
         validator.validatePagination(page, size);
         return repository.findIngredients(page, size);
     }
+    public List<IngredientEntity> getAllIngredients() {
+        return repository.findAllIngredients();
+    }
     public List<DishIngredientEntity> getIngredientByDish(Integer dishId) {
         return repository.findIngredientByDishid(dishId);
     }
@@ -145,6 +148,13 @@ public class IngredientService {
 
             );
             return ingredient.getStockValueAt(instant);
+        }catch (SQLException e){
+            throw new RuntimeException(e);
+        }
+    }
+    public IngredientEntity getIngredientById(Integer id) {
+        try (Connection conn=dataSource.getConnection()){
+            return repository.findById(conn,id);
         }catch (SQLException e){
             throw new RuntimeException(e);
         }

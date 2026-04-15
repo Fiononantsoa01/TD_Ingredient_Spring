@@ -55,7 +55,37 @@ ORDER BY id LIMIT ? OFFSET ?
             throw new RuntimeException(e);
         }
     };
+    public List<IngredientEntity> findAllIngredients() {
+        List<IngredientEntity> ingredients = new ArrayList<>();
 
+        String sql = """
+SELECT i.id, i.name, i.price, i.category, di.id_dish  
+FROM ingredient i inner join dishIngredient di 
+on i.id=di.id_ingredient
+ORDER BY id 
+""";
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                IngredientEntity ing = new IngredientEntity();
+                ing.setId(rs.getInt("id"));
+                ing.setName(rs.getString("name"));
+                ing.setPrice(rs.getDouble("price"));
+                ing.setCategory(Category.valueOf(rs.getString("category")));
+                DishEntity dish = new DishEntity();
+                dish.setId(rs.getInt("id_dish"));
+                /*ing.setDish(dish);*/
+                ingredients.add(ing);
+            }
+
+            return ingredients;
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    };
     public Integer findIdByName(Connection conn, String name) throws SQLException {
 
         String sql = "SELECT id FROM ingredient WHERE LOWER(name) = LOWER(?) LIMIT 1";

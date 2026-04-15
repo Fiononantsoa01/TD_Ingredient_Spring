@@ -1,5 +1,6 @@
 package hei.ingredient.Service;
 
+import hei.ingredient.DTO.DishCreateRequest;
 import hei.ingredient.Entity.DishEntity;
 import hei.ingredient.Entity.DishIngredientEntity;
 import hei.ingredient.Entity.IngredientEntity;
@@ -59,6 +60,36 @@ public class DishService {
             throw new RuntimeException(e);
         }
     }*/
+   public List<DishEntity> createDishes(List<DishCreateRequest> dishes) {
+
+       try (Connection conn = dataSource.getConnection()) {
+
+           conn.setAutoCommit(false);
+
+           List<DishEntity> result = new ArrayList<>();
+
+           for (DishCreateRequest dish : dishes) {
+
+               // 🔥 vérifier existence
+               if (repository.existsByName( dish.getName())) {
+                   throw new RuntimeException("Dish.name=" + dish.getName() + " already exists");
+               }
+               DishEntity dishDTO = new DishEntity();
+               dishDTO.setName(dish.getName());
+               dishDTO.setDishType(dish.getDishType());
+               dishDTO.setPrice(dish.getPrice());
+               int id= repository.insertDish(conn,dishDTO);
+                dishDTO.setId(id);
+               result.add(dishDTO);
+           }
+
+           conn.commit();
+           return result;
+
+       } catch (SQLException e) {
+           throw new RuntimeException(e);
+       }
+   }
    public void saveDish(Integer dishId, List<DishIngredientEntity> list) {
 
        if (dishId == null) {
@@ -78,4 +109,18 @@ public class DishService {
    }
 
 
+    public List<DishEntity> getFilteredDishes(Double priceUnder, Double priceOver, String name) {
+        try (Connection conn = dataSource.getConnection()) {
+
+            return repository.findFiltered(conn, priceUnder, priceOver, name);
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<DishEntity> getAllDishes() {
+       return repository.findAllDishes();
+
+    }
 }
