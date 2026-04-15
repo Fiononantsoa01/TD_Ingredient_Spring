@@ -1,9 +1,7 @@
 package hei.ingredient.Repository;
 
 import hei.ingredient.DishIdDTO;
-import hei.ingredient.Entity.Category;
-import hei.ingredient.Entity.DishEntity;
-import hei.ingredient.Entity.IngredientEntity;
+import hei.ingredient.Entity.*;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
@@ -21,11 +19,16 @@ public class IngredientRepository {
         this.dataSource = dataSource;
     }
 
-    public List<IngredientEntity> findIngredients(int page, int size) {
+   public List<IngredientEntity> findIngredients(int page, int size) {
         int offset = (page - 1) * size;
         List<IngredientEntity> ingredients = new ArrayList<>();
 
-        String sql = "SELECT id, name, price, category, id_dish  FROM ingredient ORDER BY id LIMIT ? OFFSET ?";
+        String sql = """
+SELECT i.id, i.name, i.price, i.category, di.id_dish  
+FROM ingredient i inner join dishIngredient di 
+on i.id=di.id_ingredient
+ORDER BY id LIMIT ? OFFSET ?
+""";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -40,7 +43,9 @@ public class IngredientRepository {
                 ing.setName(rs.getString("name"));
                 ing.setPrice(rs.getDouble("price"));
                 ing.setCategory(Category.valueOf(rs.getString("category")));
-                ing.setDish(new DishEntity(rs.getInt("id_dish")));
+                DishEntity dish = new DishEntity();
+                dish.setId(rs.getInt("id_dish"));
+                /*ing.setDish(dish);*/
                 ingredients.add(ing);
             }
 
@@ -50,6 +55,54 @@ public class IngredientRepository {
             throw new RuntimeException(e);
         }
     };
+    public List<IngredientEntity> findAllIngredients() {
+        List<IngredientEntity> ingredients = new ArrayList<>();
+
+        String sql = """
+SELECT i.id, i.name, i.price, i.category, di.id_dish  
+FROM ingredient i inner join dishIngredient di 
+on i.id=di.id_ingredient
+ORDER BY id 
+""";
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                IngredientEntity ing = new IngredientEntity();
+                ing.setId(rs.getInt("id"));
+                ing.setName(rs.getString("name"));
+                ing.setPrice(rs.getDouble("price"));
+                ing.setCategory(Category.valueOf(rs.getString("category")));
+                DishEntity dish = new DishEntity();
+                dish.setId(rs.getInt("id_dish"));
+                /*ing.setDish(dish);*/
+                ingredients.add(ing);
+            }
+
+            return ingredients;
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    };
+    public Integer findIdByName(Connection conn, String name) throws SQLException {
+
+        String sql = "SELECT id FROM ingredient WHERE LOWER(name) = LOWER(?) LIMIT 1";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, name.trim());
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt("id");
+            }
+        }
+
+        return null;
+    }
     public boolean existsByName(String name) {
         try (Connection conn=dataSource.getConnection()) {
             String sql = "SELECT COUNT(1) FROM ingredient WHERE name = ?";
@@ -66,15 +119,16 @@ public class IngredientRepository {
             throw new RuntimeException(e);
         }
     }
-        public IngredientEntity insertIngredient(IngredientEntity ingredient)  {
-            String sql = "INSERT INTO ingredient (name, price, category, id_dish) VALUES (?, ?, ?, ?)";
+     /*   public IngredientEntity insertIngredient(IngredientEntity ingredient)  {
+           /* String sql = "INSERT INTO ingredient (name, price, category, id_dish) VALUES (?, ?, ?, ?)";
+            String sql = "INSERT INTO ingredient (name, price, category) VALUES (?, ?, ?)";
             KeyHolder keyHolder = new GeneratedKeyHolder();
             try (Connection conn=dataSource.getConnection()) {
                 PreparedStatement ps=conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
                 ps.setString(1, ingredient.getName());
                 ps.setDouble(2, ingredient.getPrice());
                 ps.setObject(3, ingredient.getCategory().name(), java.sql.Types.OTHER);
-                ps.setObject(4, ingredient.getDish() != null ? ingredient.getDish().getId() : null);
+               /* ps.setObject(4, ingredient.getDish() != null ? ingredient.getDish().getId() : null);
                 ps.executeUpdate();
                 ResultSet rs = ps.getGeneratedKeys();
                 if (rs.next()) {
@@ -84,7 +138,26 @@ public class IngredientRepository {
             }catch (SQLException e){
                 throw new RuntimeException(e);
         }
-    }
+    }*/
+     public int insertIngredient( Connection conn,IngredientEntity ingredient) throws SQLException {
+
+         String sql = "INSERT INTO ingredient (name, price, category) VALUES (?, ?, ?) RETURNING id";
+
+         try (PreparedStatement ps = conn.prepareStatement(sql);) {
+
+             ps.setString(1, ingredient.getName());
+             ps.setDouble(2, ingredient.getPrice());
+             ps.setObject(3, ingredient.getCategory().name(), java.sql.Types.OTHER);
+
+             ResultSet rs = ps.executeQuery();
+             if (rs.next()) {
+                 return rs.getInt("id");
+             }
+         }
+
+         throw new SQLException("Failed to insert ingredient");
+     }
+
     public List<IngredientEntity> findIngredientsByCriteria(
             String ingredientName,
             Category category,
@@ -95,9 +168,9 @@ public class IngredientRepository {
         List<IngredientEntity> ingredients = new ArrayList<>();
 
         StringBuilder sql = new StringBuilder("""
-        SELECT i.id, i.name, i.price, i.category, i.id_dish,d.name
-        FROM ingredient i
-        LEFT JOIN dish d ON i.id_dish = d.id
+        SELECT i.id, i.name, i.price, i.category, di.id_dish,d.name as dishName
+        FROM ingredient i JOIN dishIngredient di ON i.id = di.id_ingredient
+        JOIN dish d ON di.id_dish = d.id
         WHERE 1=1
     """);
 
@@ -144,8 +217,8 @@ public class IngredientRepository {
                 if (rs.getObject("id_dish") != null) {
                     DishEntity dish = new DishEntity();
                     dish.setId(rs.getInt("id_dish"));
-                    dish.setName(rs.getString("name"));
-                    ing.setDish(dish);
+                    dish.setName(rs.getString("dishName"));
+                   /* ing.setDish(dish);*/
                 }
 
                 ingredients.add(ing);
@@ -157,5 +230,143 @@ public class IngredientRepository {
             throw new RuntimeException("Error filtering ingredients", e);
         }
     }
+    public List<DishIngredientEntity> findIngredientByDishid(Integer dishId) {
+        List<DishIngredientEntity> ingredients = new ArrayList<>();
+        String sql= """
+                select i.id as ingId, i.name as ingName, category ingCate,di.id_dish AS dish_id, di.quantity_required,di.unit
+                from dishIngredient di join ingredient i  on  i.id=di.id_ingredient
+                join dish d on di.id_dish = d.id
+                where di.id_dish = ?""";
 
+        try (Connection con=dataSource.getConnection()){
+            PreparedStatement ps=con.prepareStatement(sql);
+            ps.setInt(1, dishId);
+            ResultSet rs=ps.executeQuery();
+            while (rs.next()){
+                DishIngredientEntity ing = new DishIngredientEntity();
+                IngredientEntity i=new IngredientEntity();
+                i.setId(rs.getInt("ingId"));
+                i.setName(rs.getString("ingName"));
+                i.setCategory(Category.valueOf(rs.getString("ingCate")));
+                ing.setIngredient(i);
+                DishEntity d=new DishEntity();
+                d.setId(rs.getInt("dish_id"));
+                ing.setDish(d);
+                ing.setQuantity(rs.getDouble("quantity_required"));
+                ing.setUnit(UnitEnum.valueOf(rs.getString("unit")));
+                ingredients.add(ing);
+            }
+            return ingredients;
+        }catch (SQLException e){
+            throw new RuntimeException("Error filtering ingredients", e);
+        }
+    }
+    public List<StockMovement> loadMovements(Connection conn, int ingredientId) throws SQLException {
+
+        String sql = "SELECT * FROM stock_movement WHERE id_ingredient = ?";
+
+        List<StockMovement> list = new ArrayList<>();
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, ingredientId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+
+                while (rs.next()) {
+
+                    StockValue value = new StockValue(
+                            rs.getDouble("quantity"),
+                            UnitEnum.valueOf(rs.getString("unit"))
+                    );
+
+                    StockMovement sm = new StockMovement();
+                    sm.setId(rs.getInt("id"));
+                    sm.setValue(value);
+                    sm.setType(MovementTypeEnum.valueOf(rs.getString("type")));
+                    sm.setCreationDateTime(rs.getTimestamp("creation_datetime").toInstant());
+
+                    list.add(sm);
+                }
+            }
+        }
+
+        return list;
+    }
+    public List<IngredientEntity> findAll(Connection conn) throws SQLException {
+
+        String sql = "SELECT * FROM ingredient";
+
+        List<IngredientEntity> list = new ArrayList<>();
+
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+
+                IngredientEntity i = new IngredientEntity();
+                i.setId(rs.getInt("id"));
+                i.setName(rs.getString("name"));
+                i.setPrice(rs.getDouble("price"));
+                i.setCategory(Category.valueOf(rs.getString("category")));
+
+                list.add(i);
+            }
+        }
+
+        return list;
+    }
+    /*public IngredientEntity findByNameStock(Connection conn, String name) throws SQLException {
+
+        String sql = "SELECT * FROM ingredient WHERE LOWER(name) = LOWER(?) LIMIT 1";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, name);
+
+            try (ResultSet rs = ps.executeQuery()) {
+
+                if (rs.next()) {
+
+                    IngredientEntity i = new IngredientEntity();
+                    i.setId(rs.getInt("id"));
+                    i.setName(rs.getString("name"));
+                    i.setPrice(rs.getDouble("price"));
+                    i.setCategory(Category.valueOf(rs.getString("category")));
+
+                    // 🔥 charger stock movements
+                    i.setStockMovementList(loadMovements(conn, i.getId()));
+
+                    return i;
+                }
+            }
+        }
+
+        return null;
+    }*/
+    public IngredientEntity findById(Connection conn, int id) throws SQLException {
+
+        String sql = "SELECT * FROM ingredient WHERE id = ?";
+        System.out.println("👉 Searching ingredient with id = " + id);
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                System.out.println("✅ Ingredient FOUND in DB");
+                IngredientEntity i = new IngredientEntity();
+                i.setId(rs.getInt("id"));
+                i.setName(rs.getString("name"));
+                i.setPrice(rs.getDouble("price"));
+                i.setCategory(Category.valueOf(rs.getString("category")));
+                return i;
+            }else {
+                System.out.println(" Ingredient NOT FOUND in DB");
+            }
+        }
+
+        return null;
+    }
 }
