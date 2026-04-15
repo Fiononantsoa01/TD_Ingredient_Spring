@@ -3,6 +3,7 @@ package hei.ingredient.Service;
 import hei.ingredient.Entity.Category;
 import hei.ingredient.Entity.DishIngredientEntity;
 import hei.ingredient.Entity.IngredientEntity;
+import hei.ingredient.Entity.StockValue;
 import hei.ingredient.Repository.IngredientRepository;
 import hei.ingredient.Repository.StockMovementRepository;
 import hei.ingredient.Validator.IngredientValidator;
@@ -12,8 +13,11 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class IngredientService {
@@ -70,14 +74,23 @@ public class IngredientService {
     public IngredientEntity saveIngredients(IngredientEntity newIngredients) {
         try(Connection conn = dataSource.getConnection()) {
             conn.setAutoCommit(false);
-            int genId= repository.insertIngredient(conn,newIngredients);
-            newIngredients.setId(genId);
+            Integer idIngr;
+            //check the Ingredient existing
+            Integer existingId= repository.findIdByName(conn,newIngredients.getName());
+            if(existingId != null) {
+                idIngr = existingId;
+                newIngredients.setId(idIngr);
+            }else{
+                idIngr=repository.insertIngredient(conn,newIngredients);
+                newIngredients.setId(idIngr);
+            }
+            newIngredients.setId(idIngr);
             if(newIngredients.getStockMovementList()!=null
             && !newIngredients.getStockMovementList().isEmpty()) {
                 stockMovementRepository.insertStockMovements(
                         conn,
                         newIngredients.getStockMovementList(),
-                        genId
+                        idIngr
                 );
             }
             conn.commit();
@@ -96,5 +109,44 @@ public class IngredientService {
         validator.validateCriteria(page, size);
 
         return repository.findIngredientsByCriteria(name, category, dishName, page, size);
+    }
+    public Map<String, StockValue> verifyStockAt(Instant instant) {
+
+        try (Connection conn = dataSource.getConnection()) {
+
+            List<IngredientEntity> ingredients = repository.findAll(conn);
+
+            Map<String, StockValue> result = new HashMap<>();
+
+            for (IngredientEntity i : ingredients) {
+
+                // IMPORTANT: charger mouvements
+                i.setStockMovementList(repository.loadMovements(conn, i.getId()));
+
+                StockValue stock = i.getStockValueAt(instant);
+
+                result.put(i.getName(), stock);
+            }
+
+            return result;
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public StockValue getStockAt(Integer id,Instant instant) {
+        try (Connection conn=dataSource.getConnection()){
+            IngredientEntity ingredient= repository.findById(conn,id);
+            if(ingredient == null) {
+                throw new RuntimeException("Ingredient not found");
+            }
+            ingredient.setStockMovementList(
+                    repository.loadMovements(conn, ingredient.getId())
+
+            );
+            return ingredient.getStockValueAt(instant);
+        }catch (SQLException e){
+            throw new RuntimeException(e);
+        }
     }
 }

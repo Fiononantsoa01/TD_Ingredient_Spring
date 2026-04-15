@@ -22,7 +22,7 @@ public class IngredientEntity {
     private Category category;
    /* private DishEntity dish;*/
     private List<StockMovement> stockMovementList;
-  /*  public StockValue getStockValueAt(Instant instant) {
+    public StockValue getStockValueAt(Instant instant) {
 
         double total = 0.0;
         UnitEnum unit = null;
@@ -33,28 +33,30 @@ public class IngredientEntity {
 
         for (StockMovement sm : stockMovementList) {
 
-            // ignorer les mouvements après la date
+            // 🔥 sécurité
+            if (sm == null || sm.getValue() == null || sm.getCreationDateTime() == null) {
+                continue;
+            }
+
+            // ignorer après instant
             if (sm.getCreationDateTime().isAfter(instant)) {
                 continue;
             }
 
-            // garder une unité (on suppose même unité pour tous)
+            // unité (une seule unité supposée)
             if (unit == null) {
-                unit = sm.getUnit();
+                unit = sm.getValue().getUnit();
             }
 
+            double qty = sm.getValue().getQuantity();
+
             if (sm.getType() == MovementTypeEnum.IN) {
-                total += sm.getValue().getQuantity();
+                total += qty;
             } else if (sm.getType() == MovementTypeEnum.OUT) {
-                total -= sm.getValue().getQuantity();
+                total -= qty;
             }
         }
 
         return new StockValue(total, unit);
     }
-
-
-  /*  String getDishName() {
-        return dish.getName();
-    }*/
 }

@@ -56,6 +56,23 @@ ORDER BY id LIMIT ? OFFSET ?
         }
     };
 
+    public Integer findIdByName(Connection conn, String name) throws SQLException {
+
+        String sql = "SELECT id FROM ingredient WHERE LOWER(name) = LOWER(?) LIMIT 1";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, name.trim());
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt("id");
+            }
+        }
+
+        return null;
+    }
     public boolean existsByName(String name) {
         try (Connection conn=dataSource.getConnection()) {
             String sql = "SELECT COUNT(1) FROM ingredient WHERE name = ?";
@@ -214,5 +231,112 @@ ORDER BY id LIMIT ? OFFSET ?
             throw new RuntimeException("Error filtering ingredients", e);
         }
     }
+    public List<StockMovement> loadMovements(Connection conn, int ingredientId) throws SQLException {
 
+        String sql = "SELECT * FROM stock_movement WHERE id_ingredient = ?";
+
+        List<StockMovement> list = new ArrayList<>();
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, ingredientId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+
+                while (rs.next()) {
+
+                    StockValue value = new StockValue(
+                            rs.getDouble("quantity"),
+                            UnitEnum.valueOf(rs.getString("unit"))
+                    );
+
+                    StockMovement sm = new StockMovement();
+                    sm.setId(rs.getInt("id"));
+                    sm.setValue(value);
+                    sm.setType(MovementTypeEnum.valueOf(rs.getString("type")));
+                    sm.setCreationDateTime(rs.getTimestamp("creation_datetime").toInstant());
+
+                    list.add(sm);
+                }
+            }
+        }
+
+        return list;
+    }
+    public List<IngredientEntity> findAll(Connection conn) throws SQLException {
+
+        String sql = "SELECT * FROM ingredient";
+
+        List<IngredientEntity> list = new ArrayList<>();
+
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+
+                IngredientEntity i = new IngredientEntity();
+                i.setId(rs.getInt("id"));
+                i.setName(rs.getString("name"));
+                i.setPrice(rs.getDouble("price"));
+                i.setCategory(Category.valueOf(rs.getString("category")));
+
+                list.add(i);
+            }
+        }
+
+        return list;
+    }
+    /*public IngredientEntity findByNameStock(Connection conn, String name) throws SQLException {
+
+        String sql = "SELECT * FROM ingredient WHERE LOWER(name) = LOWER(?) LIMIT 1";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, name);
+
+            try (ResultSet rs = ps.executeQuery()) {
+
+                if (rs.next()) {
+
+                    IngredientEntity i = new IngredientEntity();
+                    i.setId(rs.getInt("id"));
+                    i.setName(rs.getString("name"));
+                    i.setPrice(rs.getDouble("price"));
+                    i.setCategory(Category.valueOf(rs.getString("category")));
+
+                    // 🔥 charger stock movements
+                    i.setStockMovementList(loadMovements(conn, i.getId()));
+
+                    return i;
+                }
+            }
+        }
+
+        return null;
+    }*/
+    public IngredientEntity findById(Connection conn, int id) throws SQLException {
+
+        String sql = "SELECT * FROM ingredient WHERE id = ?";
+        System.out.println("👉 Searching ingredient with id = " + id);
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                System.out.println("✅ Ingredient FOUND in DB");
+                IngredientEntity i = new IngredientEntity();
+                i.setId(rs.getInt("id"));
+                i.setName(rs.getString("name"));
+                i.setPrice(rs.getDouble("price"));
+                i.setCategory(Category.valueOf(rs.getString("category")));
+                return i;
+            }else {
+                System.out.println(" Ingredient NOT FOUND in DB");
+            }
+        }
+
+        return null;
+    }
 }

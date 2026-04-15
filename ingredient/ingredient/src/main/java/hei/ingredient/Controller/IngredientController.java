@@ -3,10 +3,12 @@ package hei.ingredient.Controller;
 import hei.ingredient.Entity.Category;
 import hei.ingredient.Entity.DishIngredientEntity;
 import hei.ingredient.Entity.IngredientEntity;
+import hei.ingredient.Entity.StockValue;
 import hei.ingredient.Service.IngredientService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.util.List;
 
 @RestController
@@ -58,5 +60,17 @@ public class IngredientController {
         }
 
         return ResponseEntity.ok(result); // 200
+    }
+    @GetMapping("/{id}/stock")
+    public StockValue getStockValue(
+            @PathVariable Integer id,
+            @RequestParam(required = false) String t) {
+        Instant instant;
+        if (t != null) {
+            instant= Instant.now();
+        }else{
+            instant = Instant.parse(t);
+        }
+        return service.getStockAt(id,instant);
     }
 }
