@@ -37,6 +37,9 @@ public class IngredientService {
         validator.validatePagination(page, size);
         return repository.findIngredients(page, size);
     }
+    public List<IngredientEntity> getAllIngredients() {
+        return repository.findAllIngredients();
+    }
     public List<DishIngredientEntity> getIngredientByDish(Integer dishId) {
         return repository.findIngredientByDishid(dishId);
     }
