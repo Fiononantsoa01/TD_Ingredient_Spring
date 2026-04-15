@@ -1,0 +1,196 @@
+openapi: 3.0.3
+info:
+  title: Ingredient Management API
+  version: 1.0.0
+  description: API pour la gestion des ingrédients et des plats
+
+paths:
+
+  /api/ingredients:
+    get:
+      summary: Récupérer tous les ingrédients
+      responses:
+        "200":
+          description: Liste des ingrédients récupérée avec succès
+        "500":
+          description: Erreur serveur
+
+  /api/ingredients/pagination:
+    get:
+      summary: Récupérer les ingrédients avec pagination
+      parameters:
+        - name: page
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: size
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Liste paginée récupérée
+        "400":
+          description: Paramètres invalides
+        "500":
+          description: Erreur serveur
+
+  /api/ingredients/{id}:
+    get:
+      summary: Récupérer un ingrédient par ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Ingrédient trouvé
+        "404":
+          description: Ingrédient non trouvé
+        "500":
+          description: Erreur serveur
+
+  /api/ingredients/searchByDish/{idDish}:
+    get:
+      summary: Récupérer les ingrédients d’un plat
+      parameters:
+        - name: idDish
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Liste des ingrédients du plat
+        "404":
+          description: Plat non trouvé
+        "500":
+          description: Erreur serveur
+
+  /api/ingredients/{id}/stock:
+    get:
+      summary: Obtenir le stock d’un ingrédient à un instant donné
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: t
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Stock récupéré
+        "404":
+          description: Ingrédient non trouvé
+        "500":
+          description: Erreur serveur
+
+  /api/dishes/all:
+    get:
+      summary: Récupérer tous les plats
+      responses:
+        "200":
+          description: Liste des plats
+        "500":
+          description: Erreur serveur
+
+  /api/dishes/{id}:
+    get:
+      summary: Récupérer un plat par ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Plat trouvé
+        "404":
+          description: Plat non trouvé
+        "500":
+          description: Erreur serveur
+
+  /api/dishes/getDishes:
+    get:
+      summary: Filtrer les plats
+      parameters:
+        - name: priceUnder
+          in: query
+          required: false
+          schema:
+            type: number
+            format: double
+        - name: priceOver
+          in: query
+          required: false
+          schema:
+            type: number
+            format: double
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste des plats filtrés
+        "400":
+          description: Paramètres invalides
+        "500":
+          description: Erreur serveur
+
+  /api/dishes/{dishId}/ingredients:
+    put:
+      summary: Mettre à jour les ingrédients d’un plat
+      parameters:
+        - name: dishId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+      responses:
+        "200":
+          description: Mise à jour réussie
+        "400":
+          description: Données invalides
+        "404":
+          description: Plat non trouvé
+        "500":
+          description: Erreur serveur
+
+  /api/dishes/createDishes:
+    post:
+      summary: Créer plusieurs plats
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+      responses:
+        "201":
+          description: Plats créés avec succès
+        "400":
+          description: Données invalides
+        "500":
+          description: Erreur serveur
