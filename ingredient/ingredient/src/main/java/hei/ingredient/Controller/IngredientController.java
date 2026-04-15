@@ -1,11 +1,14 @@
 package hei.ingredient.Controller;
 
 import hei.ingredient.Entity.Category;
+import hei.ingredient.Entity.DishIngredientEntity;
 import hei.ingredient.Entity.IngredientEntity;
+import hei.ingredient.Entity.StockValue;
 import hei.ingredient.Service.IngredientService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.util.List;
 
 @RestController
@@ -21,15 +24,26 @@ public class IngredientController {
     public ResponseEntity<List<IngredientEntity>> getIngredients(
             @RequestParam int page,
             @RequestParam int size
-    ) {
+    )
+    {
         List<IngredientEntity> ingredients = service.getIngredients(page, size);
         return ResponseEntity.ok(ingredients);
     }
-    @PostMapping
+    @GetMapping("/searchByDish/{idDish}")
+    public ResponseEntity<List<DishIngredientEntity>> getIngredientsByDish(@PathVariable Integer idDish)
+    {
+        List<DishIngredientEntity> ingredients= service.getIngredientByDish(idDish);
+        return ResponseEntity.ok(ingredients);
+    }
+    /*@PostMapping
     public ResponseEntity<List<IngredientEntity>> createIngredients(@RequestBody List<IngredientEntity> newIngredients) {
         List<IngredientEntity> created = service.createIngredients(newIngredients);
         return ResponseEntity.ok(created);
+    }*/@PostMapping
+    public IngredientEntity createIngredients(@RequestBody IngredientEntity newIngredients) {
+        return service.saveIngredients(newIngredients);
     }
+
     @GetMapping("/search")
     public ResponseEntity<List<IngredientEntity>> searchIngredients(
             @RequestParam(required = false) String ingredientName,
@@ -46,5 +60,17 @@ public class IngredientController {
         }
 
         return ResponseEntity.ok(result); // 200
+    }
+    @GetMapping("/{id}/stock")
+    public StockValue getStockValue(
+            @PathVariable Integer id,
+            @RequestParam(required = false) String t) {
+        Instant instant;
+        if (t != null) {
+            instant= Instant.now();
+        }else{
+            instant = Instant.parse(t);
+        }
+        return service.getStockAt(id,instant);
     }
 }
