@@ -152,4 +152,11 @@ public class IngredientService {
             throw new RuntimeException(e);
         }
     }
+    public IngredientEntity getIngredientById(Integer id) {
+        try (Connection conn=dataSource.getConnection()){
+            return repository.findById(conn,id);
+        }catch (SQLException e){
+            throw new RuntimeException(e);
+        }
+    }
 }

@@ -36,6 +36,13 @@ public class IngredientController {
     {
         List<IngredientEntity> ingredients = service.getAllIngredients();
         return ResponseEntity.ok(ingredients);
+    } @GetMapping("/{id}")
+    public ResponseEntity<IngredientEntity> getIngredientsById(@PathVariable Integer id
+
+    )
+    {
+        IngredientEntity ingredients = service.getIngredientById(id);
+        return ResponseEntity.ok(ingredients);
     }
     @GetMapping("/searchByDish/{idDish}")
     public ResponseEntity<List<DishIngredientEntity>> getIngredientsByDish(@PathVariable Integer idDish)
