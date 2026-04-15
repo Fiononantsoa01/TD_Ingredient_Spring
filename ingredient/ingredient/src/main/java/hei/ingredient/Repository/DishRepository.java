@@ -154,7 +154,7 @@ public class DishRepository {
             throw new RuntimeException(e);
         }
     }
-    /** ** ne sert à rien
+
     public boolean existsByName(String name) {
         try (Connection conn = dataSource.getConnection()) {
             String sql = "SELECT 1 FROM dish WHERE name = ?";
@@ -165,10 +165,9 @@ public class DishRepository {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-    }*/
-  /*
-  **  pour l'ancien version avec deux table
-  public DishEntity findByName(String name) {
+    }
+
+ /** public DishEntity findByName(String name) {
         try (Connection conn = dataSource.getConnection()) {
             String sql = "SELECT id, name, dish_type FROM dish WHERE name = ?";
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -188,7 +187,7 @@ public class DishRepository {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-    }*/
+    }
 
    /* public int insert(Connection conn, DishEntity dish) throws SQLException {
         String sql = "INSERT INTO dish(name, dish_type) VALUES (?, ?)";
@@ -269,7 +268,7 @@ public DishIngredientEntity findByDIshAndIngredient(DishEntity dish, IngredientE
     ){
         throw new RuntimeException(e);
     }
-}
+}*//*
     public  int insert(Connection conn,DishIngredientEntity dishIngredient) {
         String insert = "insert into dishIngredient(id_dish, id_ingredient, quantity_required, unit) values(?,?,?,?)";
         try(PreparedStatement psIns= conn.prepareStatement(insert, Statement.RETURN_GENERATED_KEYS)){
@@ -292,7 +291,7 @@ public DishIngredientEntity findByDIshAndIngredient(DishEntity dish, IngredientE
             throw new RuntimeException(e);
         }
     }
-    public  int update(Connection conn,DishIngredientEntity dishIngredient) {
+    /*public  int update(Connection conn,DishIngredientEntity dishIngredient) {
         String upSql = "update dishIngredient set quantity_required=?,unit=? where id=?";
         try (PreparedStatement psUp = conn.prepareStatement(upSql)) {
             psUp.setDouble(1, dishIngredient.getQuantity());
@@ -313,6 +312,29 @@ public DishIngredientEntity findByDIshAndIngredient(DishEntity dish, IngredientE
             throw new RuntimeException(e);
         }
     }*/
+ public int insertDish(Connection conn, DishEntity dish) throws SQLException {
+
+     String sql = """
+        INSERT INTO dish (name, dish_type, price)
+        VALUES (?, ?, ?)
+        RETURNING id
+    """;
+
+     try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+         ps.setString(1, dish.getName());
+         ps.setObject(2, dish.getDishType().name(), Types.OTHER);
+         ps.setDouble(3, dish.getPrice());
+
+         ResultSet rs = ps.executeQuery();
+
+         if (rs.next()) {
+             return rs.getInt("id");
+         }
+     }
+
+     throw new SQLException("Insert failed");
+ }
        public void updateDishIngredients(Integer dishId, List<DishIngredientEntity> ingredients) {
            String deleteSql = "DELETE FROM dishIngredient WHERE id_dish= ?";
            String insertSql = "insert into dishIngredient(id_dish, id_ingredient, quantity_required, unit) values(?,?,?,?)";
@@ -345,5 +367,49 @@ public DishIngredientEntity findByDIshAndIngredient(DishEntity dish, IngredientE
                throw new RuntimeException(e);
            }
        }
+    public List<DishEntity> findFiltered(Connection conn,
+                                         Double priceUnder,
+                                         Double priceOver,
+                                         String name) throws SQLException {
 
+        StringBuilder sql = new StringBuilder("SELECT * FROM dish WHERE 1=1");
+
+        List<Object> params = new ArrayList<>();
+
+        if (priceUnder != null) {
+            sql.append(" AND price < ?");
+            params.add(priceUnder);
+        }
+
+        if (priceOver != null) {
+            sql.append(" AND price > ?");
+            params.add(priceOver);
+        }
+
+        if (name != null) {
+            sql.append(" AND LOWER(name) LIKE LOWER(?)");
+            params.add("%" + name + "%");
+        }
+
+        PreparedStatement ps = conn.prepareStatement(sql.toString());
+
+        for (int i = 0; i < params.size(); i++) {
+            ps.setObject(i + 1, params.get(i));
+        }
+
+        ResultSet rs = ps.executeQuery();
+
+        List<DishEntity> list = new ArrayList<>();
+
+        while (rs.next()) {
+            DishEntity d = new DishEntity();
+            d.setId(rs.getInt("id"));
+            d.setName(rs.getString("name"));
+            d.setPrice(rs.getDouble("price"));
+            d.setDishType(DishTypeEnum.valueOf(rs.getString("dish_type")));
+            list.add(d);
+        }
+
+        return list;
+    }
 }

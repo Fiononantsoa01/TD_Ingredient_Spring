@@ -1,5 +1,6 @@
 package hei.ingredient.Controller;
 
+import hei.ingredient.DTO.DishCreateRequest;
 import hei.ingredient.Entity.DishEntity;
 import hei.ingredient.Entity.DishIngredientEntity;
 import hei.ingredient.Exception.BadRequestException;
@@ -33,6 +34,15 @@ public class DishController {
             return ResponseEntity.badRequest().build();
         }
     }*/
+   @PostMapping("/createDishes")
+   public ResponseEntity<List<DishEntity>> createDishes(
+           @RequestBody List<DishCreateRequest> dishes
+   ) {
+
+       List<DishEntity> created = dishService.createDishes(dishes);
+
+       return ResponseEntity.status(201).body(created);
+   }
    @PutMapping("/{dishId}/ingredients")
    public ResponseEntity<?> saveDish(
            @PathVariable Integer dishId,
@@ -51,5 +61,13 @@ public class DishController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(dishes);
         }
         return ResponseEntity.ok(dishes);
+    }
+    @GetMapping("/getDishes")
+    public List<DishEntity> getDishes(
+            @RequestParam(required = false) Double priceUnder,
+            @RequestParam(required = false) Double priceOver,
+            @RequestParam(required = false) String name
+    ) {
+        return dishService.getFilteredDishes(priceUnder, priceOver, name);
     }
 }
