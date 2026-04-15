@@ -412,4 +412,26 @@ public DishIngredientEntity findByDIshAndIngredient(DishEntity dish, IngredientE
 
         return list;
     }
+
+    public List<DishEntity> findAllDishes() {
+        String sql = "SELECT * FROM dish ";
+        try(Connection conn= dataSource.getConnection()) {
+            PreparedStatement ps= conn.prepareStatement(sql);
+            List<DishEntity> list = new ArrayList<>();
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                DishEntity d = new DishEntity();
+                d.setId(rs.getInt("id"));
+                d.setName(rs.getString("name"));
+                d.setPrice(rs.getDouble("price"));
+                d.setDishType(DishTypeEnum.valueOf(rs.getString("dish_type")));
+                list.add(d);
+            }
+
+            return list;
+
+        }catch (SQLException e){
+            throw new RuntimeException(e);
+        }
+    }
 }

@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -23,6 +24,11 @@ public class DishController {
     public ResponseEntity<DishEntity> getDishById(@PathVariable Integer id) {
             DishEntity dish = dishService.getDishById(id);
             return ResponseEntity.ok(dish);
+    }
+    @GetMapping("/all")
+    public ResponseEntity< List<DishEntity>> getAll() {
+        List<DishEntity> allDishes=dishService.getAllDishes();
+        return ResponseEntity.ok(allDishes);
     }
    /*@PostMapping
     public ResponseEntity<DishEntity> saveDish(@RequestBody DishEntity dish) {

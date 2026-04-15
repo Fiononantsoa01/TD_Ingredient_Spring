@@ -118,4 +118,9 @@ public class DishService {
             throw new RuntimeException(e);
         }
     }
+
+    public List<DishEntity> getAllDishes() {
+       return repository.findAllDishes();
+
+    }
 }
